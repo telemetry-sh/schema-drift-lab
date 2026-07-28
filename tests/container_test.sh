@@ -40,6 +40,20 @@ for _ in {1..40}; do
 done
 
 docker exec "$container" swipl -q -s /app/src/server.pl -g server:main -t halt -- --port=8080 --healthcheck
+
+for _ in {1..40}; do
+  health_status="$(docker inspect --format '{{.State.Health.Status}}' "$container")"
+  if [[ "$health_status" = "healthy" ]]; then
+    break
+  fi
+  if [[ "$health_status" = "unhealthy" ]]; then
+    docker inspect --format 'health={{.State.Health.Status}}' "$container"
+    docker logs "$container"
+    exit 1
+  fi
+  sleep 0.25
+done
+
 test "$(docker inspect --format '{{.State.Health.Status}}' "$container")" = "healthy"
 
 printf 'Container checks passed\n'
