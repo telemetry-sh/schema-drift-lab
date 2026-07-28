@@ -26,9 +26,13 @@
 main :-
     current_prolog_flag(argv, Args),
     (   memberchk('--json', Args)
-    ->  run_json
+    ->  run_json,
+        halt(0)
     ;   memberchk('--healthcheck', Args)
-    ->  run_healthcheck(Args)
+    ->  (   run_healthcheck(Args)
+        ->  halt(0)
+        ;   halt(1)
+        )
     ;   run_server(Args)
     ).
 
@@ -61,8 +65,6 @@ run_healthcheck(Args) :-
     Status =:= 200,
     sub_string(Body, _, _, _, "\"ok\""),
     !.
-run_healthcheck(_) :-
-    halt(1).
 
 environment_or_option_port(Args, Port) :-
     (   option_value(Args, '--port=', _, PortAtom)
