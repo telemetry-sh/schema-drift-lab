@@ -33,7 +33,7 @@ main :-
         ->  halt(0)
         ;   halt(1)
         )
-    ;   run_server(Args)
+    ;   catch(run_server(Args), Error, fatal_server_error(Error))
     ).
 
 run_json :-
@@ -46,9 +46,18 @@ run_server(Args) :-
     option_value(Args, '--host=', '0.0.0.0', Host),
     environment_or_option_port(Args, Port),
     configure_public_directory(Args),
-    http_server(http_dispatch, [port(Port), workers(8), ip(Host)]),
+    http_server_options(Host, Port, ServerOptions),
+    http_server(http_dispatch, ServerOptions),
     format(user_error, 'schema-drift-lab listening on http://~w:~d~n', [Host, Port]),
     thread_get_message(_).
+
+http_server_options('0.0.0.0', Port, [port(Port), workers(8)]) :-
+    !.
+http_server_options(Host, Port, [port(Port), workers(8), ip(Host)]).
+
+fatal_server_error(Error) :-
+    print_message(error, Error),
+    halt(1).
 
 run_healthcheck(Args) :-
     environment_or_option_port(Args, Port),
