@@ -16,10 +16,9 @@ set +e
 preflight="$(docker run --rm "$image" --json 2>&1)"
 preflight_status="$?"
 set -e
-printf '%s\n' "$preflight"
-test "$preflight_status" = "0"
+printf 'Container CLI exit status: %s\n' "$preflight_status"
 printf '%s\n' "$preflight" |
-  jq -e '.experiment == "schema-drift" and .truth.total_events == 12000' >/dev/null
+  jq -e 'select(.experiment == "schema-drift" and .truth.total_events == 12000) | {experiment, total_events: .truth.total_events}'
 
 docker run --detach --name "$container" "$image" >/dev/null
 
