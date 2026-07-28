@@ -25,3 +25,4 @@ HEALTHCHECK --interval=5s --timeout=3s --start-period=3s --retries=5 \
   CMD ["swipl", "-q", "-s", "/app/src/server.pl", "--", "--port=8080", "--healthcheck"]
 
 ENTRYPOINT ["swipl", "-q", "-s", "/app/src/server.pl", "--"]
+CMD ["--port=8080"]
