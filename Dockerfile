@@ -1,5 +1,7 @@
 FROM debian:trixie-slim
 
+ARG DEBIAN_FRONTEND=noninteractive
+
 RUN apt-get update \
     && apt-get install --yes --no-install-recommends ca-certificates swi-prolog-nox \
     && rm -rf /var/lib/apt/lists/*
@@ -15,6 +17,7 @@ USER nobody:nogroup
 
 ENV HOST=0.0.0.0
 ENV PORT=8080
+ENV HOME=/tmp
 
 EXPOSE 8080
 

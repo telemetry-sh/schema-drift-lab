@@ -11,7 +11,7 @@ jobs:
   prolog:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Install runtime and test tools
         run: |
           sudo apt-get update
@@ -22,6 +22,6 @@ jobs:
   container:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Exercise the production image
         run: ./tests/container_test.sh
