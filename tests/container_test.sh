@@ -29,17 +29,17 @@ test "$container_start_status" = "0"
 
 for _ in {1..40}; do
   if [[ "$(docker inspect --format '{{.State.Running}}' "$container")" != "true" ]]; then
-    docker inspect --format '{{json .State}}' "$container"
+    docker inspect --format 'status={{.State.Status}} exit={{.State.ExitCode}} error={{.State.Error}}' "$container"
     docker logs "$container"
     exit 1
   fi
-  if docker exec "$container" swipl -q -s /app/src/server.pl -- --port=8080 --healthcheck; then
+  if docker exec "$container" swipl -q -s /app/src/server.pl -g server:main -t halt -- --port=8080 --healthcheck; then
     break
   fi
   sleep 0.25
 done
 
-docker exec "$container" swipl -q -s /app/src/server.pl -- --port=8080 --healthcheck
+docker exec "$container" swipl -q -s /app/src/server.pl -g server:main -t halt -- --port=8080 --healthcheck
 test "$(docker inspect --format '{{.State.Health.Status}}' "$container")" = "healthy"
 
 printf 'Container checks passed\n'

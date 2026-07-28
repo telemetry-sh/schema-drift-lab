@@ -22,7 +22,7 @@ ENV HOME=/tmp
 EXPOSE 8080
 
 HEALTHCHECK --interval=5s --timeout=3s --start-period=3s --retries=5 \
-  CMD ["swipl", "-q", "-s", "/app/src/server.pl", "--", "--port=8080", "--healthcheck"]
+  CMD ["swipl", "-q", "-s", "/app/src/server.pl", "-g", "server:main", "-t", "halt", "--", "--port=8080", "--healthcheck"]
 
-ENTRYPOINT ["swipl", "-q", "-s", "/app/src/server.pl", "--"]
+ENTRYPOINT ["swipl", "-q", "-s", "/app/src/server.pl", "-g", "server:main", "-t", "halt", "--"]
 CMD ["--port=8080"]
