@@ -49,7 +49,7 @@ run_server(Args) :-
     http_server_options(Host, Port, ServerOptions),
     http_server(http_dispatch, ServerOptions),
     format(user_error, 'schema-drift-lab listening on http://~w:~d~n', [Host, Port]),
-    thread_get_message(_).
+    thread_get_message(stop).
 
 http_server_options('0.0.0.0', Port, [port(Port), workers(8)]) :-
     !.

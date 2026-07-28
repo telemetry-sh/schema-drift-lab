@@ -20,10 +20,16 @@ printf 'Container CLI exit status: %s\n' "$preflight_status"
 printf '%s\n' "$preflight" |
   jq -e 'select(.experiment == "schema-drift" and .truth.total_events == 12000) | {experiment, total_events: .truth.total_events}'
 
-docker run --detach --name "$container" "$image" >/dev/null
+set +e
+container_id="$(docker run --detach --name "$container" "$image" 2>&1)"
+container_start_status="$?"
+set -e
+printf 'Container start status: %s (%s)\n' "$container_start_status" "$container_id"
+test "$container_start_status" = "0"
 
 for _ in {1..40}; do
   if [[ "$(docker inspect --format '{{.State.Running}}' "$container")" != "true" ]]; then
+    docker inspect --format '{{json .State}}' "$container"
     docker logs "$container"
     exit 1
   fi
