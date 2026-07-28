@@ -1,0 +1,27 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  prolog:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install runtime and test tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes swi-prolog-nox jq
+      - name: Run checks
+        run: make check
+
+  container:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Exercise the production image
+        run: ./tests/container_test.sh

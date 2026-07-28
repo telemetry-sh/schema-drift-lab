@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="An interactive telemetry schema drift lab powered by SWI-Prolog.">
+    <title>Schema Drift Lab — telemetry.sh</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <a class="skip-link" href="#experiment">Skip to experiment</a>
+    <header class="site-header">
+      <a class="brand" href="https://telemetry.sh" aria-label="telemetry.sh home">
+        <span class="brand-mark" aria-hidden="true">t/</span>
+        <span>telemetry.sh</span>
+      </a>
+      <nav aria-label="Lab sections">
+        <a href="#contract">Contract</a>
+        <a href="#strategies">Strategies</a>
+        <a href="#evidence">Evidence</a>
+      </nav>
+      <span class="runtime-badge">SWI-PROLOG · LIVE</span>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="page-title">
+        <div class="hero-copy">
+          <p class="eyebrow">Observability failure mode  /  059</p>
+          <h1 id="page-title">The data arrived.<br><em>The meaning didn’t.</em></h1>
+          <p class="lede">
+            Three producer versions emit the same request telemetry with different
+            fields, types, units, and route shapes. Every payload is valid JSON.
+            Watch four ingestion policies tell four different stories.
+          </p>
+          <div class="hero-actions">
+            <a class="primary-action" href="#experiment">Run the rollout <span aria-hidden="true">↓</span></a>
+            <a class="text-action" href="https://github.com/telemetry-sh/schema-drift-lab">View source ↗</a>
+          </div>
+        </div>
+        <div class="hero-art" aria-label="A canonical telemetry event splitting into three incompatible schemas">
+          <div class="packet packet-origin">
+            <span>CANONICAL EVENT</span>
+            <strong>duration_ms: 1800</strong>
+            <small>is_error: true</small>
+          </div>
+          <div class="connector" aria-hidden="true"></div>
+          <div class="packet-grid">
+            <div class="packet packet-good">
+              <span>V1 · ORIGINAL</span>
+              <strong>duration_ms</strong>
+              <small>status_code: 500</small>
+            </div>
+            <div class="packet packet-warn">
+              <span>V2 · DRIFT</span>
+              <strong>duration_s</strong>
+              <small>status: "500"</small>
+            </div>
+            <div class="packet packet-bad">
+              <span>V3 · DRIFT</span>
+              <strong>latency_ms</strong>
+              <small>outcome: "error"</small>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="contract-section" id="contract" aria-labelledby="contract-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">01 / THE CONTRACT</p>
+            <h2 id="contract-title">One meaning, three wire formats</h2>
+          </div>
+          <p>Nothing crashes. That is precisely the problem.</p>
+        </div>
+        <div class="table-shell">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Meaning</th>
+                <th scope="col">v1 · canonical</th>
+                <th scope="col">v2 · partial rollout</th>
+                <th scope="col">v3 · new SDK</th>
+                <th scope="col">Failure</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">Latency</th>
+                <td><code>duration_ms: 1800</code></td>
+                <td><code>duration_s: 1.8</code></td>
+                <td><code>latency_ms: 1800</code></td>
+                <td><span class="failure-tag">unit + name</span></td>
+              </tr>
+              <tr>
+                <th scope="row">Error</th>
+                <td><code>status_code: 500</code></td>
+                <td><code>status: "500"</code></td>
+                <td><code>outcome: "error"</code></td>
+                <td><span class="failure-tag">type + value</span></td>
+              </tr>
+              <tr>
+                <th scope="row">Route</th>
+                <td><code>route: "orders.show"</code></td>
+                <td><code>endpoint: "/orders/884219"</code></td>
+                <td><code>route_name: "orders.show"</code></td>
+                <td><span class="failure-tag">cardinality</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="experiment-section" id="experiment" aria-labelledby="experiment-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">02 / THE ROLLOUT</p>
+            <h2 id="experiment-title">Change the evidence</h2>
+          </div>
+          <p id="experiment-status" class="status" role="status" aria-live="polite">Loading Prolog model…</p>
+        </div>
+
+        <div class="experiment-layout">
+          <form class="control-panel" id="controls">
+            <div class="panel-title">
+              <span>EXPERIMENT INPUTS</span>
+              <button type="reset">Reset defaults</button>
+            </div>
+
+            <label for="total-events">
+              <span>Total events</span>
+              <output for="total-events" id="total-events-output">12,000</output>
+            </label>
+            <input id="total-events" name="total_events" type="range" min="1000" max="50000" step="1000" value="12000">
+
+            <label for="v2-percent">
+              <span>v2 rollout</span>
+              <output for="v2-percent" id="v2-percent-output">35%</output>
+            </label>
+            <input id="v2-percent" name="v2_percent" type="range" min="0" max="80" step="5" value="35">
+
+            <label for="v3-percent">
+              <span>v3 rollout</span>
+              <output for="v3-percent" id="v3-percent-output">25%</output>
+            </label>
+            <input id="v3-percent" name="v3_percent" type="range" min="0" max="80" step="5" value="25">
+
+            <label for="slow-percent">
+              <span>Slow requests</span>
+              <output for="slow-percent" id="slow-percent-output">12%</output>
+            </label>
+            <input id="slow-percent" name="slow_percent" type="range" min="0" max="40" step="1" value="12">
+
+            <label for="raw-route-percent">
+              <span>Raw route IDs in v2</span>
+              <output for="raw-route-percent" id="raw-route-percent-output">18%</output>
+            </label>
+            <input id="raw-route-percent" name="raw_route_percent" type="range" min="0" max="100" step="2" value="18">
+
+            <label for="max-series">
+              <span>Route-series budget</span>
+              <output for="max-series" id="max-series-output">500</output>
+            </label>
+            <input id="max-series" name="max_series" type="range" min="25" max="2000" step="25" value="500">
+
+            <p class="control-note">The Prolog model recomputes every strategy from the same deterministic event population.</p>
+          </form>
+
+          <div class="result-panel">
+            <div class="truth-strip" aria-label="Ground truth">
+              <article>
+                <span>GROUND TRUTH</span>
+                <strong id="truth-events">—</strong>
+                <small>events emitted</small>
+              </article>
+              <article>
+                <span>ACTUAL SLO VIOLATIONS</span>
+                <strong id="truth-slow">—</strong>
+                <small id="truth-slow-detail">—</small>
+              </article>
+              <article>
+                <span>ACTUAL MEAN</span>
+                <strong id="truth-latency">—</strong>
+                <small>milliseconds</small>
+              </article>
+              <article>
+                <span>SCHEMA DRIFT</span>
+                <strong id="truth-drift">—</strong>
+                <small>of the rollout</small>
+              </article>
+            </div>
+
+            <div class="chart-card">
+              <div class="chart-header">
+                <div>
+                  <span>SEMANTIC COVERAGE</span>
+                  <strong>Stored ≠ understood</strong>
+                </div>
+                <div class="legend" aria-hidden="true">
+                  <span><i class="line-lenient"></i> Lenient</span>
+                  <span><i class="line-coerce"></i> Coerce</span>
+                  <span><i class="line-versioned"></i> Versioned</span>
+                </div>
+              </div>
+              <svg id="coverage-chart" class="line-chart" viewBox="0 0 760 250" role="img" aria-labelledby="coverage-chart-title coverage-chart-desc">
+                <title id="coverage-chart-title">Semantic coverage during the rollout</title>
+                <desc id="coverage-chart-desc">A line chart comparing lenient, coercion, and versioned ingestion.</desc>
+              </svg>
+            </div>
+
+            <div class="cohort-bar-card">
+              <div>
+                <span>FINAL PRODUCER MIX</span>
+                <strong id="mix-caption">—</strong>
+              </div>
+              <div class="cohort-bar" role="img" aria-label="Final producer version mix">
+                <span class="cohort-v1" id="cohort-v1"></span>
+                <span class="cohort-v2" id="cohort-v2"></span>
+                <span class="cohort-v3" id="cohort-v3"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="strategies-section" id="strategies" aria-labelledby="strategies-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">03 / FOUR STORIES</p>
+            <h2 id="strategies-title">Same rollout. Different truth.</h2>
+          </div>
+          <p>Select an ingestion policy to inspect its claim.</p>
+        </div>
+
+        <div class="strategy-tabs" role="tablist" aria-label="Ingestion strategies">
+          <button id="tab-lenient" role="tab" aria-selected="true" aria-controls="strategy-detail" data-strategy="lenient">01 Lenient</button>
+          <button id="tab-coerce" role="tab" aria-selected="false" aria-controls="strategy-detail" data-strategy="coerce">02 Coerce</button>
+          <button id="tab-strict" role="tab" aria-selected="false" aria-controls="strategy-detail" data-strategy="strict">03 Drop invalid</button>
+          <button id="tab-versioned" role="tab" aria-selected="false" aria-controls="strategy-detail" data-strategy="versioned">04 Versioned</button>
+        </div>
+
+        <article class="strategy-detail" id="strategy-detail" role="tabpanel" tabindex="0" aria-labelledby="tab-lenient">
+          <div class="strategy-summary">
+            <p class="eyebrow" id="strategy-state">—</p>
+            <h3 id="strategy-name">—</h3>
+            <p id="strategy-description">—</p>
+            <blockquote id="strategy-diagnosis">—</blockquote>
+          </div>
+          <div class="metric-grid">
+            <div>
+              <span>SEMANTIC COVERAGE</span>
+              <strong id="metric-coverage">—</strong>
+              <small id="metric-understood">—</small>
+            </div>
+            <div>
+              <span>SLO VIOLATIONS SEEN</span>
+              <strong id="metric-slo">—</strong>
+              <small id="metric-slo-delta">—</small>
+            </div>
+            <div>
+              <span>MEAN LATENCY</span>
+              <strong id="metric-mean">—</strong>
+              <small id="metric-mean-delta">—</small>
+            </div>
+            <div>
+              <span>ROUTE SERIES</span>
+              <strong id="metric-series">—</strong>
+              <small id="metric-series-budget">—</small>
+            </div>
+            <div>
+              <span>DROPPED EVENTS</span>
+              <strong id="metric-dropped">—</strong>
+              <small>at ingest</small>
+            </div>
+            <div>
+              <span>UNIT VIOLATIONS</span>
+              <strong id="metric-units">—</strong>
+              <small>silently mishandled</small>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="evidence-section" id="evidence" aria-labelledby="evidence-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">04 / RAW EVIDENCE</p>
+            <h2 id="evidence-title">Keep the payload. Explain the transform.</h2>
+          </div>
+          <p>Telemetry becomes trustworthy when the normalization is inspectable.</p>
+        </div>
+
+        <div class="evidence-layout">
+          <div class="evidence-browser">
+            <div class="evidence-tabs" role="tablist" aria-label="Schema evidence">
+              <button id="evidence-tab-v1" role="tab" aria-selected="true" aria-controls="evidence-detail" data-evidence="0">v1</button>
+              <button id="evidence-tab-v2" role="tab" aria-selected="false" aria-controls="evidence-detail" data-evidence="1">v2</button>
+              <button id="evidence-tab-v3" role="tab" aria-selected="false" aria-controls="evidence-detail" data-evidence="2">v3</button>
+              <button id="evidence-tab-contract" role="tab" aria-selected="false" aria-controls="evidence-detail" data-evidence="3">contract</button>
+            </div>
+            <div class="evidence-code" id="evidence-detail" role="tabpanel" tabindex="0" aria-labelledby="evidence-tab-v1">
+              <div class="code-column">
+                <span>RECEIVED</span>
+                <pre><code id="raw-payload">—</code></pre>
+              </div>
+              <div class="transform-arrow" aria-hidden="true">→</div>
+              <div class="code-column">
+                <span>NORMALIZED</span>
+                <pre><code id="normalized-payload">—</code></pre>
+              </div>
+            </div>
+            <p class="finding" id="evidence-finding">—</p>
+          </div>
+
+          <aside class="query-card">
+            <span>ASK TELEMETRY.SH</span>
+            <h3>Which producer changed the meaning?</h3>
+            <pre><code>from spans
+| group by schema_version
+| measure
+    count(),
+    p99(duration_ms),
+    distinct(route)
+| compare deploy.sha</code></pre>
+            <p>
+              Correlate the rollout, schema version, unit violations, and cardinality
+              growth in one investigation—without guessing which dashboard lied.
+            </p>
+            <a href="https://telemetry.sh">Explore telemetry.sh <span aria-hidden="true">↗</span></a>
+          </aside>
+        </div>
+      </section>
+
+      <section class="lesson-section" aria-labelledby="lesson-title">
+        <p class="eyebrow">THE OPERATING PRINCIPLE</p>
+        <h2 id="lesson-title">Validate syntax. <em>Observe semantics.</em></h2>
+        <p id="lesson">An accepted event is not necessarily an understood event.</p>
+      </section>
+    </main>
+
+    <footer>
+      <p>Built as an executable observability experiment in Prolog.</p>
+      <div>
+        <a href="https://github.com/telemetry-sh/schema-drift-lab">GitHub ↗</a>
+        <a href="https://telemetry.sh">telemetry.sh ↗</a>
+      </div>
+    </footer>
+
+    <script src="/app.js" defer></script>
+  </body>
+</html>
